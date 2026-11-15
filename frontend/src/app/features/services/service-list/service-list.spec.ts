@@ -42,7 +42,7 @@ describe('ServiceList', () => {
     fixture.destroy();
   });
 
-  it('keeps the service table under 60 rendered rows for 2,000 services', async () => {
+  it('keeps all 2,000 services in one virtual list while rendering fewer than 60 rows', async () => {
     const services: ServiceRecord[] = Array.from({ length: 2000 }, (_value, index) => ({
       id: `svc-${String(index + 1).padStart(4, '0')}`,
       name: `service-${index + 1}`,
@@ -71,12 +71,18 @@ describe('ServiceList', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.visibleServices().length).toBe(2000);
-    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(25);
+    expect(fixture.componentInstance.windowedServices().length).toBeLessThanOrEqual(50);
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBeLessThan(60);
 
-    fixture.componentInstance.pageSize = 50;
-    fixture.componentInstance.changePageSize();
+    fixture.componentInstance.onTableScroll({
+      currentTarget: { scrollTop: 68 * 1000, clientHeight: 640 },
+    } as unknown as Event);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(50);
+    expect(fixture.componentInstance.virtualStartIndex()).toBeGreaterThan(0);
+    expect(fixture.componentInstance.windowedServices()[0]).toBe(
+      fixture.componentInstance.visibleServices()[fixture.componentInstance.virtualStartIndex()],
+    );
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBeLessThan(60);
     fixture.destroy();
   });
 });

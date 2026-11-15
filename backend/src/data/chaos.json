@@ -1,10 +1,10 @@
 {
-  "rate": 500,
+  "rate": 2000,
   "ws": "up",
   "sse": "up",
   "chaos": "off",
   "token_ttl": null,
   "http": "off",
   "kill": 0,
-  "eventRate": 500
+  "eventRate": 2000
 }

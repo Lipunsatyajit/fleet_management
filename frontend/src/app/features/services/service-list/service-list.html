@@ -33,20 +33,19 @@
             <option value="errorRate">Highest error rate</option>
             <option value="requestsPerSecond">Highest requests</option>
           </select>
-          <label class="visually-hidden" for="page-size">Rows per page</label>
-          <select id="page-size" [(ngModel)]="pageSize" (ngModelChange)="changePageSize()">
-            <option [ngValue]="10">10 / page</option><option [ngValue]="25">25 / page</option><option [ngValue]="50">50 / page</option>
-          </select>
         </div>
       </div>
 
-      <div class="table-scroll">
+      <div #tableScroll class="table-scroll" role="region" aria-label="All services; scroll to browse results" tabindex="0" (scroll)="onTableScroll($event)">
         <table>
           <thead>
             <tr><th>Service</th><th>Team / Region</th><th>Status</th><th>p95 latency</th><th>Error rate</th><th>Requests / sec</th></tr>
           </thead>
           <tbody>
-            @for (service of pageServices(); track service.id) {
+            @if (topSpacerHeight() > 0) {
+              <tr class="virtual-spacer" aria-hidden="true"><td colspan="6" [style.height.px]="topSpacerHeight()"></td></tr>
+            }
+            @for (service of windowedServices(); track service.id) {
               <tr>
                 <td><a class="service-link" [routerLink]="['/services', service.id]"><strong>{{ service.name }}</strong><small>{{ service.id }}</small></a></td>
                 <td>{{ service.team }}<small>{{ service.region }}</small></td>
@@ -58,19 +57,23 @@
                 <td>{{ service.requestsPerSecond }}</td>
               </tr>
             } @empty {
-              <tr><td class="empty" colspan="6">No services match these filters.</td></tr>
+              @if (!isLoading() && !errorMessage()) {
+                <tr><td class="empty" colspan="6">No services match these filters.</td></tr>
+              }
+            }
+            @if (bottomSpacerHeight() > 0) {
+              <tr class="virtual-spacer" aria-hidden="true"><td colspan="6" [style.height.px]="bottomSpacerHeight()"></td></tr>
             }
           </tbody>
         </table>
       </div>
 
-      <footer class="pagination">
-        <span>Showing {{ firstVisibleNumber }}–{{ lastVisibleNumber }} of {{ visibleServices().length }}</span>
-        <div class="page-controls">
-          <button type="button" (click)="goToPreviousPage()" [disabled]="currentPage <= 1">Previous</button>
-          <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
-          <button type="button" (click)="goToNextPage()" [disabled]="currentPage >= totalPages">Next</button>
-        </div>
+      <footer class="virtual-summary">
+        @if (visibleServices().length > 0) {
+          <span>Rendering services {{ firstVisibleNumber }}–{{ lastVisibleNumber }} of {{ visibleServices().length }}. Scroll to browse the full list.</span>
+        } @else {
+          <span>No matching services.</span>
+        }
       </footer>
     </section>
   }

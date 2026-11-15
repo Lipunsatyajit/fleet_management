@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, ViewChild, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -15,18 +15,27 @@ import { auditTime } from 'rxjs';
   styleUrl: './service-list.css',
 })
 export class ServiceList implements OnInit {
+  private static readonly rowHeight = 68;
+  private static readonly overscanRows = 10;
+  private static readonly maxRenderedRows = 50;
+
+  @ViewChild('tableScroll') private tableViewport?: ElementRef<HTMLDivElement>;
+
   get services() { return this.fleetData.services; }
   readonly visibleServices = signal<ServiceRecord[]>([]);
-  readonly pageServices = signal<ServiceRecord[]>([]);
+  readonly windowedServices = signal<ServiceRecord[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal('');
   readonly statusChangedIds = signal<ReadonlySet<string>>(new Set());
+  readonly virtualStartIndex = signal(0);
+  readonly virtualEndIndex = signal(0);
+  readonly topSpacerHeight = signal(0);
+  readonly bottomSpacerHeight = signal(0);
 
   searchText = '';
   selectedStatus = 'All';
   selectedSort = 'latency';
-  currentPage = 1;
-  pageSize = 25;
+  private viewportHeight = 640;
   private readonly previousStatuses = new Map<string, ServiceStatus>();
   private readonly statusFlashTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -76,7 +85,7 @@ export class ServiceList implements OnInit {
     });
   }
 
-  updateVisibleServices(resetPage = true, updateUrl = true): void {
+  updateVisibleServices(resetScroll = true, updateUrl = true): void {
     const search = this.searchText.trim().toLowerCase();
     const filtered = this.services().filter((service) => {
       const matchesSearch = service.name.toLowerCase().includes(search)
@@ -93,8 +102,11 @@ export class ServiceList implements OnInit {
     });
 
     this.visibleServices.set(filtered);
-    if (resetPage) this.currentPage = 1;
-    this.updatePageServices();
+    if (resetScroll) {
+      this.resetScrollPosition();
+    } else {
+      this.updateVirtualWindow(this.tableViewport?.nativeElement.scrollTop ?? 0, true);
+    }
 
     if (updateUrl) {
       void this.router.navigate([], {
@@ -110,40 +122,55 @@ export class ServiceList implements OnInit {
     }
   }
 
-  changePageSize(): void {
-    this.currentPage = 1;
-    this.updatePageServices();
-  }
-
-  goToPreviousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage -= 1;
-      this.updatePageServices();
-    }
-  }
-
-  goToNextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage += 1;
-      this.updatePageServices();
-    }
-  }
-
-  get totalPages(): number {
-    return Math.ceil(this.visibleServices().length / this.pageSize);
+  onTableScroll(event: Event): void {
+    const viewport = event.currentTarget as HTMLElement;
+    this.viewportHeight = viewport.clientHeight;
+    this.updateVirtualWindow(viewport.scrollTop);
   }
 
   get firstVisibleNumber(): number {
-    return this.visibleServices().length === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+    return this.visibleServices().length === 0 ? 0 : this.virtualStartIndex() + 1;
   }
 
   get lastVisibleNumber(): number {
-    return Math.min(this.currentPage * this.pageSize, this.visibleServices().length);
+    return this.virtualEndIndex();
   }
 
-  private updatePageServices(): void {
-    const start = (this.currentPage - 1) * this.pageSize;
-    this.pageServices.set(this.visibleServices().slice(start, start + this.pageSize));
+  private resetScrollPosition(): void {
+    if (this.tableViewport) this.tableViewport.nativeElement.scrollTop = 0;
+    this.updateVirtualWindow(0, true);
+  }
+
+  private updateVirtualWindow(scrollTop: number, force = false): void {
+    const services = this.visibleServices();
+    if (services.length === 0) {
+      this.virtualStartIndex.set(0);
+      this.virtualEndIndex.set(0);
+      this.windowedServices.set([]);
+      this.topSpacerHeight.set(0);
+      this.bottomSpacerHeight.set(0);
+      return;
+    }
+
+    const viewportRows = Math.ceil(this.viewportHeight / ServiceList.rowHeight);
+    const renderCount = Math.min(
+      ServiceList.maxRenderedRows,
+      viewportRows + ServiceList.overscanRows * 2,
+    );
+    const maximumStart = Math.max(0, services.length - renderCount);
+    const start = Math.min(
+      maximumStart,
+      Math.max(0, Math.floor(Math.max(0, scrollTop - ServiceList.rowHeight) / ServiceList.rowHeight) - ServiceList.overscanRows),
+    );
+    const end = Math.min(services.length, start + renderCount);
+
+    if (!force && start === this.virtualStartIndex() && end === this.virtualEndIndex()) return;
+
+    this.virtualStartIndex.set(start);
+    this.virtualEndIndex.set(end);
+    this.windowedServices.set(services.slice(start, end));
+    this.topSpacerHeight.set(start * ServiceList.rowHeight);
+    this.bottomSpacerHeight.set((services.length - end) * ServiceList.rowHeight);
   }
 
   private trackStatusChanges(events: MetricEvent[]): void {

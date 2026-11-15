@@ -10,9 +10,7 @@
 }
 
 .page-heading,
-.panel-heading,
-.pagination,
-.page-controls {
+.panel-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -96,24 +94,47 @@ select {
 }
 
 .table-scroll {
-  overflow-x: auto;
+  height: min(65vh, 640px);
+  min-height: 280px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.table-scroll:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: -3px;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: 13px;
 }
 
+th:nth-child(1) { width: 23%; }
+th:nth-child(2) { width: 21%; }
+th:nth-child(3) { width: 13%; }
+th:nth-child(4) { width: 15%; }
+th:nth-child(5) { width: 13%; }
+th:nth-child(6) { width: 15%; }
+
 th,
 td {
-  padding: 13px 14px;
+  height: 68px;
+  box-sizing: border-box;
+  padding: 8px 14px;
   border-bottom: 1px solid #f1f5f9;
   white-space: nowrap;
 }
 
 th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
   background: #f8fafc;
   color: #64748b;
   font-size: 11px;
@@ -153,6 +174,20 @@ td small {
   animation: status-change-flash 900ms ease-out;
 }
 
+.virtual-spacer td {
+  height: 0;
+  padding: 0;
+  border: 0;
+  line-height: 0;
+}
+
+.virtual-summary {
+  padding: 14px 18px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 13px;
+}
+
 @keyframes status-change-flash {
   0%, 35% { background: #fef08a; }
   100% { background: transparent; }
@@ -160,28 +195,6 @@ td small {
 
 @media (prefers-reduced-motion: reduce) {
   .status-cell.status-changed { animation: none; background: #fef08a; }
-}
-
-.pagination {
-  padding: 14px 18px;
-  border-top: 1px solid #e2e8f0;
-  color: #64748b;
-  font-size: 13px;
-}
-
-.page-controls button {
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #fff;
-  color: #172033;
-  cursor: pointer;
-}
-
-.page-controls button:disabled {
-  background: #f8fafc;
-  color: #94a3b8;
-  cursor: default;
 }
 
 .message,
@@ -218,6 +231,5 @@ td small {
 @media (max-width: 650px) {
   .services-page { padding: 18px; }
   .page-heading { align-items: flex-start; flex-direction: column; }
-  .pagination { align-items: flex-start; flex-direction: column; }
-  .page-controls { flex-wrap: wrap; }
+  .table-scroll { height: 65vh; }
 }
