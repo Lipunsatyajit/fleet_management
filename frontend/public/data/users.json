@@ -1,0 +1,14 @@
+﻿[
+    {
+        "username":  "viewer",
+        "password":  "fleet-viewer-demo",
+        "role":  "viewer",
+        "displayName":  "Aarav Sharma"
+    },
+    {
+        "username":  "operator",
+        "password":  "fleet-operator-demo",
+        "role":  "operator",
+        "displayName":  "Priya Nair"
+    }
+]

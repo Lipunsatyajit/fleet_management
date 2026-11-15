@@ -1,0 +1,59 @@
+<main class="dashboard">
+  <header class="page-heading">
+    <div class="heading-copy">
+      <p class="eyebrow"><span class="heading-mark"></span>FLEET PULSE <span>/</span> COMMAND VIEW</p>
+      <h1>Service health</h1>
+      <p class="subtitle">A live readout of service stability and traffic across your fleet.</p>
+    </div>
+    <div class="simulation-tools">
+      <span class="simulation-label"><span class="live-dot"></span>BACKEND LIVE · {{ simulationRate() }} events/sec</span>
+      <label class="visually-hidden" for="simulation-rate">Simulation rate</label>
+      <select id="simulation-rate" [ngModel]="simulationRate()" (ngModelChange)="changeSimulationRate($event)">
+        <option [ngValue]="500">Normal · 500/sec</option>
+        <option [ngValue]="2000">Burst · 2,000/sec</option>
+      </select>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p class="message">Loading services…</p>
+  } @else if (errorMessage()) {
+    <p class="message error" role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <section class="summary" aria-label="Service totals and key metrics">
+      <article class="summary-card total"><span class="metric-label">Fleet size <i>01</i></span><strong>{{ services().length }}</strong><small>tracked services</small></article>
+      <article class="summary-card healthy"><span class="metric-label">Healthy <i>02</i></span><strong>{{ getCount('Healthy') }}</strong><small>operating normally</small></article>
+      <article class="summary-card warning"><span class="metric-label">Warning <i>03</i></span><strong>{{ getCount('Warning') }}</strong><small>needs attention</small></article>
+      <article class="summary-card critical"><span class="metric-label">Critical <i>04</i></span><strong>{{ getCount('Critical') }}</strong><small>service impact</small></article>
+      <article class="summary-card offline"><span class="metric-label">Offline <i>05</i></span><strong>{{ getCount('Offline') }}</strong><small>no response</small></article>
+      <article class="summary-card latency"><span class="metric-label">Mean p95 <i>06</i></span><strong>{{ averageLatency() }} <small>ms</small></strong><small>fleet latency</small></article>
+      <article class="summary-card requests"><span class="metric-label">Request flow <i>07</i></span><strong>{{ totalRequestsPerSecond() }}</strong><small>requests per second</small></article>
+    </section>
+
+    <section class="dashboard-charts" aria-label="Fleet charts">
+      <article class="chart-card health-chart-card">
+        <div class="chart-heading"><div><p class="panel-kicker">01 / DISTRIBUTION</p><h2>Fleet Health</h2><p>Current service state across the fleet</p></div><span class="chart-note"><i></i> Live backend data</span></div>
+        <div class="health-chart-layout">
+          @if (chartErrors().health) { <div class="chart-error" role="alert">{{ chartErrors().health }} <button type="button" (click)="retryChart('health')">Retry</button></div> }
+          @else { <div class="health-chart-area"><canvas baseChart [data]="healthChart.data" [options]="healthChart.options" [type]="'doughnut'"></canvas></div> }
+          <div class="health-legend">
+            <span><i class="healthy-dot"></i>Healthy <strong>{{ getCount('Healthy') }}</strong></span>
+            <span><i class="warning-dot"></i>Warning <strong>{{ getCount('Warning') }}</strong></span>
+            <span><i class="critical-dot"></i>Critical <strong>{{ getCount('Critical') }}</strong></span>
+            <span><i class="offline-dot"></i>Offline <strong>{{ getCount('Offline') }}</strong></span>
+          </div>
+        </div>
+      </article>
+      <article class="chart-card trend-chart-card">
+        <div class="chart-heading"><div><p class="panel-kicker">02 / LATENCY TREND</p><h2>Average p95 latency</h2><p>Live event readings · {{ trendRefreshSeconds }} second samples</p></div><strong class="chart-value">{{ averageLatency() }} <small>ms</small><span>fleet mean</span></strong></div>
+        @if (chartErrors().latency) { <div class="chart-error" role="alert">{{ chartErrors().latency }} <button type="button" (click)="retryChart('latency')">Retry</button></div> }
+        @else { <div class="trend-chart-area"><canvas baseChart [data]="latencyTrendChart.data" [options]="latencyTrendChart.options" [type]="'line'"></canvas></div> }
+      </article>
+    </section>
+
+    <section class="dashboard-note">
+      <div><p class="panel-kicker">NEXT ACTION</p><h2>Inspect a service</h2><p>Search, compare and open the full fleet catalog.</p></div>
+      <a class="catalog-link" routerLink="/services">Open service catalog <span aria-hidden="true">↗</span></a>
+    </section>
+  }
+</main>

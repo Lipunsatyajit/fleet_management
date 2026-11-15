@@ -1,0 +1,48 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/dashboard" aria-label="Fleet Pulse home">
+      <span class="brand-mark">FP</span><span>Fleet Pulse</span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Fleet Dashboard</a>
+      <a routerLink="/services" routerLinkActive="active">Services</a>
+      @if (canManageAlerts) { <a routerLink="/alert-rules" routerLinkActive="active">Alert Rules</a> }
+      @if (canManageSettings) { <a routerLink="/settings" routerLinkActive="active">Settings</a> }
+    </nav>
+    @if (currentUser(); as user) {
+      <div class="user-profile">
+        <span class="user-avatar">{{ user.displayName.charAt(0) }}</span>
+        <span class="user-info"><strong>{{ user.displayName }}</strong><small>{{ user.role }}</small></span>
+        <button type="button" (click)="logout()" aria-label="Log out">Logout</button>
+      </div>
+    }
+    <div class="sidebar-note"><span class="connection-dot"></span>Backend session</div>
+  </aside>
+  <main class="main-content">
+    @if (connectionStatus(); as connection) {
+      <header class="connection-bar" aria-live="polite" aria-atomic="true">
+        <div class="connection-summary">
+          <span class="connection-status" [class]="'connection-status ' + connection.state.toLowerCase()">
+            <i></i>
+            @if (connection.state === 'Live') { Live ({{ connection.transport }}) }
+            @else if (connection.state === 'Polling') { Polling }
+            @else if (connection.state === 'Stale') { Stale: last event {{ connection.secondsSinceLastEvent }} s ago }
+            @else if (connection.state === 'Reconnecting') { Reconnecting in {{ connection.retryInSeconds }} s }
+            @else { Offline }
+          </span>
+          @if (connection.lastEventAt) {
+            <span class="last-event">Last event: {{ connection.lastEventAt | date:'shortTime' }}</span>
+          }
+        </div>
+      </header>
+    }
+    @if (notification$ | async; as notification) {
+      <aside class="incident-toast" role="status">
+        <span class="toast-icon">!</span>
+        <span><strong>{{ notification.severity | uppercase }} incident</strong><small>{{ notification.serviceName }} · {{ notification.ruleName }}</small></span>
+        <button type="button" (click)="dismissNotification()" aria-label="Dismiss notification">×</button>
+      </aside>
+    }
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "rule-0001",
+    "name": "Rule one",
+    "conditions": [
+      {
+        "metric": "p95",
+        "operator": ">",
+        "threshold": 500,
+        "durationSec": 5
+      }
+    ],
+    "severity": "warning",
+    "enabled": true,
+    "createdAt": "2026-11-14T09:39:56.583Z",
+    "updatedAt": "2026-11-14T09:39:56.583Z"
+  }
+]

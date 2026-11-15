@@ -1,0 +1,32 @@
+[
+  {
+    "id": "RULE-001",
+    "name": "High p95 latency",
+    "metric": "latencyP95",
+    "condition": "greaterThan",
+    "threshold": 500,
+    "duration": 5,
+    "enabled": true,
+    "severity": "critical"
+  },
+  {
+    "id": "RULE-002",
+    "name": "Elevated error rate",
+    "metric": "errorRate",
+    "condition": "greaterThan",
+    "threshold": 2,
+    "duration": 3,
+    "enabled": true,
+    "severity": "warning"
+  },
+  {
+    "id": "RULE-003",
+    "name": "Low request volume",
+    "metric": "requestsPerSecond",
+    "condition": "lessThan",
+    "threshold": 10,
+    "duration": 10,
+    "enabled": false,
+    "severity": "info"
+  }
+]

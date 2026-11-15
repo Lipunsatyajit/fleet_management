@@ -1,0 +1,48 @@
+<main class="details-page">
+  <a class="back-link" routerLink="/services">← Back to services</a>
+
+  @if (isLoading()) {
+    <p class="state-message">Loading service details and sample metrics…</p>
+  } @else if (errorMessage()) {
+    <section class="state-card" role="alert">
+      <h1>Service details unavailable</h1>
+      <p>{{ errorMessage() }}</p>
+    </section>
+  } @else if (service(); as selectedService) {
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">SERVICE DETAILS · {{ selectedService.id }}</p>
+        <h1>{{ selectedService.name }}</h1>
+        <p class="subtitle">{{ selectedService.team }} team · {{ selectedService.region }}</p>
+      </div>
+      <span class="sample-label"><span class="live-dot"></span>Live backend metrics</span>
+    </header>
+
+    <section class="current-metrics" aria-label="Current service metrics">
+      <article class="metric-card"><span>Status</span><strong class="status" [class]="'status ' + selectedService.status.toLowerCase()">{{ selectedService.status }}</strong></article>
+      <article class="metric-card"><span>p95 latency</span><strong>{{ selectedService.latency }} ms</strong></article>
+      <article class="metric-card"><span>Error rate</span><strong>{{ selectedService.errorRate }}%</strong></article>
+      <article class="metric-card"><span>Requests / sec</span><strong>{{ selectedService.requestsPerSecond }}</strong></article>
+    </section>
+
+    <p class="history-note">Charts load the last 15 minutes from the backend and then update from live metric events. Each chart keeps at most 300 points.</p>
+
+    <section class="charts" aria-label="Historical metric charts">
+      <article class="chart-card">
+        <h2>p95 Latency</h2><p>Milliseconds · last 15 minutes of backend history</p>
+        @if (chartErrors().latency) { <div class="chart-error" role="alert">{{ chartErrors().latency }} <button type="button" (click)="retryChart('latency')">Retry</button></div> }
+        @else { <div class="chart-area"><canvas baseChart [data]="latencyChart.data" [options]="latencyChart.options" [type]="'line'"></canvas></div> }
+      </article>
+      <article class="chart-card">
+        <h2>Error Rate</h2><p>Percent · last 15 minutes of backend history</p>
+        @if (chartErrors().errorRate) { <div class="chart-error" role="alert">{{ chartErrors().errorRate }} <button type="button" (click)="retryChart('errorRate')">Retry</button></div> }
+        @else { <div class="chart-area"><canvas baseChart [data]="errorRateChart.data" [options]="errorRateChart.options" [type]="'line'"></canvas></div> }
+      </article>
+      <article class="chart-card">
+        <h2>Requests Per Second</h2><p>Requests · last 15 minutes of backend history</p>
+        @if (chartErrors().requests) { <div class="chart-error" role="alert">{{ chartErrors().requests }} <button type="button" (click)="retryChart('requests')">Retry</button></div> }
+        @else { <div class="chart-area"><canvas baseChart [data]="requestsChart.data" [options]="requestsChart.options" [type]="'line'"></canvas></div> }
+      </article>
+    </section>
+  }
+</main>

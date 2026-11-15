@@ -1,0 +1,77 @@
+<main class="services-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">SERVICE CATALOG</p>
+      <h1 style="color: azure;">Services</h1>
+      <p class="subtitle">Find a service and see its current health and traffic.</p>
+    </div>
+    <span class="live-label"><i></i>Updating from backend data</span>
+  </header>
+
+  @if (isLoading()) {
+    <p class="message">Loading services…</p>
+  } @else if (errorMessage()) {
+    <p class="message error" role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <section class="service-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>All services</h2>
+          <p>{{ visibleServices().length }} services match your search and status filter.</p>
+        </div>
+        <div class="filters">
+          <label class="visually-hidden" for="service-search">Search services</label>
+          <input id="service-search" type="search" placeholder="Search name, ID, team, region"
+            [(ngModel)]="searchText" (ngModelChange)="updateVisibleServices()">
+          <label class="visually-hidden" for="status-filter">Filter by status</label>
+          <select id="status-filter" [(ngModel)]="selectedStatus" (ngModelChange)="updateVisibleServices()">
+            <option>All</option><option>Healthy</option><option>Warning</option><option>Critical</option><option>Offline</option>
+          </select>
+          <label class="visually-hidden" for="sort-filter">Sort services</label>
+          <select id="sort-filter" [(ngModel)]="selectedSort" (ngModelChange)="updateVisibleServices()">
+            <option value="latency">Highest latency</option>
+            <option value="errorRate">Highest error rate</option>
+            <option value="requestsPerSecond">Highest requests</option>
+          </select>
+          <label class="visually-hidden" for="page-size">Rows per page</label>
+          <select id="page-size" [(ngModel)]="pageSize" (ngModelChange)="changePageSize()">
+            <option [ngValue]="10">10 / page</option><option [ngValue]="25">25 / page</option><option [ngValue]="50">50 / page</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Service</th><th>Team / Region</th><th>Status</th><th>p95 latency</th><th>Error rate</th><th>Requests / sec</th></tr>
+          </thead>
+          <tbody>
+            @for (service of pageServices(); track service.id) {
+              <tr>
+                <td><a class="service-link" [routerLink]="['/services', service.id]"><strong>{{ service.name }}</strong><small>{{ service.id }}</small></a></td>
+                <td>{{ service.team }}<small>{{ service.region }}</small></td>
+                <td class="status-cell" [class.status-changed]="statusChangedIds().has(service.id)">
+                  <span class="status" [class]="'status ' + service.status.toLowerCase()">{{ service.status }}</span>
+                </td>
+                <td>{{ service.latency }} ms</td>
+                <td>{{ service.errorRate }}%</td>
+                <td>{{ service.requestsPerSecond }}</td>
+              </tr>
+            } @empty {
+              <tr><td class="empty" colspan="6">No services match these filters.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="pagination">
+        <span>Showing {{ firstVisibleNumber }}–{{ lastVisibleNumber }} of {{ visibleServices().length }}</span>
+        <div class="page-controls">
+          <button type="button" (click)="goToPreviousPage()" [disabled]="currentPage <= 1">Previous</button>
+          <span>Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+          <button type="button" (click)="goToNextPage()" [disabled]="currentPage >= totalPages">Next</button>
+        </div>
+      </footer>
+    </section>
+  }
+</main>

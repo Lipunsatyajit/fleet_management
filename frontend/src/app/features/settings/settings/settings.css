@@ -1,0 +1,17 @@
+:host { display: block; color: #e6eaf4; }
+.settings-page { max-width: 1120px; margin: 0 auto; padding: 32px; }
+.page-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 26px; }
+.eyebrow { margin: 0 0 8px; color: #8290ad; font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+h1 { margin: 0; color: #f4f6fc; font-size: 30px; }.subtitle { margin: 6px 0 0; color: #8996b0; }
+.demo-label { padding: 8px 12px; border: 1px solid #293658; border-radius: 20px; background: #111a31; color: #b8c5e6; font-size: 12px; }
+.settings-card { overflow: hidden; border: 1px solid #1c2740; border-radius: 12px; background: #0d1322; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px; border-bottom: 1px solid #1c2740; }
+.setting-row h2 { margin: 0; color: #edf1fa; font-size: 16px; }.setting-row p { margin: 6px 0 0; color: #8996b0; font-size: 13px; }
+.setting-control { display: grid; min-width: 230px; gap: 7px; color: #aab5ca; font-size: 12px; }
+select { min-height: 40px; padding: 0 11px; border: 1px solid #293653; border-radius: 7px; background: #111a2c; color: #e6eaf4; font: inherit; }
+.toggle-control { display: flex; align-items: center; gap: 9px; color: #cbd5e1; font-size: 13px; }.toggle-control input { width: 17px; height: 17px; accent-color: #766bff; }
+.settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 20px 22px; color: #54e0b3; font-size: 12px; }
+.save-button { padding: 10px 15px; border: 1px solid #655bea; border-radius: 7px; background: #5549da; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }.save-button:hover { background: #655bea; }
+.limitations { margin-top: 14px; color: #8491aa; font-size: 12px; line-height: 1.6; }
+@media (max-width: 650px) { .settings-page { padding: 20px; }.setting-row { align-items: flex-start; flex-direction: column; gap: 14px; }.setting-control { width: 100%; min-width: 0; } }
+@media (max-width: 480px) { .settings-page { padding: 14px; }.page-heading { align-items: flex-start; flex-direction: column; }h1 { font-size: 25px; } }

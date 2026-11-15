@@ -1,0 +1,14 @@
+[
+  {
+    "email": "operator@pulse.dev",
+    "role": "operator",
+    "id": "u-1",
+    "passwordHash": "$2b$12$/xumDStGnu2rDoBcb5z3kOMk0MnvsLlEhUHVznmYcDBU84I5xcA2K"
+  },
+  {
+    "email": "viewer@pulse.dev",
+    "role": "viewer",
+    "id": "u-2",
+    "passwordHash": "$2b$12$.LqLLZTCaqajj7UWwOddJetew4DPp2dGVwFcu7.N4m645OaXX7ZmO"
+  }
+]

@@ -1,0 +1,28 @@
+<section class="login-card">
+  <div class="login-brand"><span class="brand-mark">FP</span><div><strong>Fleet Pulse</strong><small>Operations dashboard</small></div></div>
+  <h1>Welcome back</h1>
+  <p class="intro">Sign in with your Fleet Pulse account.</p>
+
+  <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+    <label for="username">Email or username</label>
+    <input id="username" type="text" autocomplete="username" formControlName="username" placeholder="Enter email or username">
+    @if (loginForm.controls.username.touched && loginForm.controls.username.hasError('required')) { <small class="field-error">Enter your email or username.</small> }
+
+    <label for="password">Password</label>
+    <div class="password-field">
+      <input id="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" formControlName="password" placeholder="Enter your password">
+      <button type="button" class="show-password" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+    </div>
+    @if (loginForm.controls.password.touched && loginForm.controls.password.hasError('required')) { <small class="field-error">Password is required.</small> }
+
+    @if (errorMessage) { <p class="error-message" role="alert">{{ errorMessage }}</p> }
+    <button class="submit-button" type="submit" [disabled]="isSubmitting">{{ isSubmitting ? 'Signing in…' : 'Sign in' }}</button>
+  </form>
+
+  <aside class="demo-accounts">
+    <strong>Development accounts</strong>
+    <p><b>Viewer · Aarav Sharma</b><br>Email or username: viewer@pulse.dev or viewer<br>Password: pulse123</p>
+    <p><b>Operator · Priya Nair</b><br>Email or username: operator@pulse.dev or operator<br>Password: pulse123</p>
+  </aside>
+  <p class="security-note">Your session is restored automatically when you refresh this page. Logging out clears the saved session.</p>
+</section>

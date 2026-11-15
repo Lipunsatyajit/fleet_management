@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: 4000
+      FRONTEND_ORIGIN: http://localhost:4200
+      JWT_SECRET: ${JWT_SECRET:-fleet-pulse-local-compose-secret-change-me}
+      DATA_DIRECTORY: /app/data
+    ports:
+      - "4000:4000"
+    volumes:
+      - fleet-pulse-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  fleet-pulse-data:

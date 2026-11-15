@@ -1,0 +1,136 @@
+<main class="alerts-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">OPERATIONS</p>
+      <h1 style="color: azure;">Alert rules</h1>
+      <p class="subtitle">Define thresholds and review incidents raised by live backend metrics.</p>
+    </div>
+    <span class="demo-label">Rules saved to backend</span>
+  </header>
+
+  @if (isLoading()) {
+    <p class="state-message">Loading alert rules…</p>
+  } @else if (errorMessage()) {
+    <p class="state-message error" role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <section class="rule-section">
+      <div class="section-heading"><div><h2>{{ editingRuleId ? 'Edit alert rule' : 'Create an alert rule' }}</h2><p>Rules evaluate live events and are stored by the backend.</p></div></div>
+      @if (isOperator) {
+      <form [formGroup]="ruleForm" (ngSubmit)="saveRule()" novalidate>
+        <div class="form-grid">
+          <label class="wide-field">Rule name
+            <input type="text" formControlName="name" placeholder="Example: High payment latency">
+            @if (ruleForm.controls.name.touched && ruleForm.controls.name.hasError('required')) { <small class="field-error">Enter a rule name.</small> }
+            @if (ruleForm.controls.name.touched && ruleForm.controls.name.hasError('blank')) { <small class="field-error">Name cannot contain only spaces.</small> }
+            @if (ruleForm.controls.name.touched && ruleForm.controls.name.hasError('maxlength')) { <small class="field-error">Use 60 characters or fewer.</small> }
+            @if (ruleForm.controls.name.pending) { <small role="status">Checking rule name…</small> }
+            @if (ruleForm.controls.name.hasError('nameTaken')) { <small class="field-error">A rule with this name already exists.</small> }
+          </label>
+          <div class="wide-field" formArrayName="conditions">
+            @for (condition of conditions.controls; track $index; let index = $index) {
+              <div class="form-grid condition-row" [formGroupName]="index">
+                <label>Metric
+                  <select formControlName="metric"><option value="latencyP95">p95 latency</option><option value="errorRate">Error rate</option><option value="requestsPerSecond">Requests per second</option></select>
+                </label>
+                <label>Condition
+                  <select formControlName="operator"><option value=">">Greater than (&gt;)</option><option value=">=">Greater than or equal (&gt;=)</option><option value="<">Less than (&lt;)</option><option value="<=">Less than or equal (&lt;=)</option></select>
+                </label>
+                <label>{{ thresholdLabel(condition.controls.metric.value) }}
+                  <input type="number" min="0" [max]="condition.controls.metric.value === 'errorRate' ? 100 : null" step="any" formControlName="threshold">
+                  @if (condition.controls.threshold.touched && condition.controls.threshold.invalid) { <small class="field-error">Enter a valid number of zero or more.</small> }
+                </label>
+                <label>Duration (seconds)
+                  <input type="number" min="1" max="3600" step="1" formControlName="durationSec">
+                  @if (condition.controls.durationSec.touched && condition.controls.durationSec.invalid) { <small class="field-error">Duration must be 1–3600 seconds.</small> }
+                </label>
+                <button type="button" (click)="removeCondition(index)" [disabled]="conditions.length === 1">Remove condition</button>
+                @if (condition.hasError('errorRateTooHigh')) { <small class="field-error wide-field">Error rate cannot be greater than 100%.</small> }
+              </div>
+            }
+            <button type="button" class="secondary-button" (click)="addCondition()">Add condition</button>
+          </div>
+          <label>Severity
+            <select formControlName="severity"><option value="info">Info</option><option value="warning">Warning</option><option value="critical">Critical</option></select>
+          </label>
+          <label class="enabled-field"><input type="checkbox" formControlName="enabled"> Enable this rule</label>
+        </div>
+        <div class="form-actions">
+          <button class="primary-button" type="submit" [disabled]="saving || ruleForm.pending">{{ saving ? 'Saving…' : editingRuleId ? 'Save changes' : 'Create rule' }}</button>
+          @if (editingRuleId) { <button class="secondary-button" type="button" (click)="cancelEdit()">Cancel</button> }
+        </div>
+      </form>
+      }
+      @if (savedMessage) { <p class="section-heading" role="status">{{ savedMessage }}</p> }
+    </section>
+
+    <section class="rule-section">
+      <div class="section-heading"><div><h2>Configured rules</h2><p>{{ rules().length }} rules · saved in backend JSON storage.</p></div></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Name</th><th>Condition</th><th>Duration</th><th>Severity</th><th>State</th><th>Actions</th></tr></thead>
+          <tbody>
+            @for (rule of pageRules; track rule.id) {
+              <tr>
+                <td><strong>{{ rule.name }}</strong><small>{{ rule.id }}</small></td>
+                <td>{{ ruleConditionsText(rule) }}</td>
+                <td>{{ rule.conditions?.[0]?.durationSec ?? rule.duration }} sec</td>
+                <td><span class="severity" [class]="'severity ' + rule.severity">{{ rule.severity }}</span></td>
+                <td><span class="rule-state" [class.enabled]="rule.enabled">{{ rule.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                <td class="row-actions">@if (isOperator) { <button type="button" (click)="editRule(rule)">Edit</button><button type="button" (click)="toggleRule(rule.id)">{{ rule.enabled ? 'Disable' : 'Enable' }}</button><button class="danger-action" type="button" (click)="deleteRule(rule.id)">Delete</button> }</td>
+              </tr>
+            } @empty {
+              <tr><td class="empty" colspan="6">No alert rules configured yet.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" aria-label="Configured rules pagination">
+        <span>Showing {{ rulesFirstRow }}–{{ rulesLastRow }} of {{ rules().length }} rules</span>
+        <div class="pagination-controls">
+          <label>Rows per page
+            <select [value]="rulesPageSize" (change)="changeRulesPageSize(+$any($event.target).value)">
+              <option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+            </select>
+          </label>
+          <button type="button" (click)="previousRulesPage()" [disabled]="rulesPage() === 1">Previous</button>
+          <span>Page {{ rulesPage() }} of {{ rulesTotalPages }}</span>
+          <button type="button" (click)="nextRulesPage()" [disabled]="rulesPage() >= rulesTotalPages">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="rule-section incidents-section">
+      <div class="section-heading"><div><h2>Incidents</h2><p>{{ incidents().length }} incidents raised during this session.</p></div></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Incident</th><th>Service</th><th>Rule</th><th>Severity</th><th>Triggered</th><th>Value</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            @for (incident of pageIncidents; track incident.id) {
+              <tr>
+                <td>{{ incident.id }}</td><td><strong>{{ incident.serviceName }}</strong><small>{{ incident.serviceId }}</small></td><td>{{ incident.ruleName }}</td>
+                <td><span class="severity" [class]="'severity ' + incident.severity">{{ incident.severity }}</span></td>
+                <td>{{ incident.triggeredAt | date:'medium' }}</td><td>{{ incident.currentValue }}</td><td>{{ incident.status }}</td>
+                <td>@if (incident.status === 'open') { <button type="button" (click)="resolveIncident(incident.id)">Resolve</button> } @else { <span class="resolved-label">Resolved</span> }</td>
+              </tr>
+            } @empty {
+              <tr><td class="empty" colspan="8">No incidents yet. They appear after a rule condition stays true for its configured duration.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" aria-label="Incidents pagination">
+        <span>Showing {{ incidentsFirstRow }}–{{ incidentsLastRow }} of {{ incidents().length }} incidents</span>
+        <div class="pagination-controls">
+          <label>Rows per page
+            <select [value]="incidentsPageSize" (change)="changeIncidentsPageSize(+$any($event.target).value)">
+              <option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+            </select>
+          </label>
+          <button type="button" (click)="previousIncidentsPage()" [disabled]="incidentsPage() === 1">Previous</button>
+          <span>Page {{ incidentsPage() }} of {{ incidentsTotalPages }}</span>
+          <button type="button" (click)="nextIncidentsPage()" [disabled]="incidentsPage() >= incidentsTotalPages">Next</button>
+        </div>
+      </div>
+    </section>
+  }
+</main>

@@ -1,0 +1,35 @@
+<main class="settings-page">
+  <header class="page-heading">
+    <div><p class="eyebrow">PREFERENCES</p><h1>Settings</h1><p class="subtitle">Adjust chart display and backend event settings.</p></div>
+    <span class="demo-label">Local settings + backend rate</span>
+  </header>
+
+  <form class="settings-card" #settingsForm="ngForm" (ngSubmit)="savePreferences()">
+    <section class="setting-row">
+      <div><h2>Metric chart refresh</h2><p>How often the dashboard adds a new latency trend point.</p></div>
+      <label class="setting-control" for="refresh-interval">Refresh interval
+        <select id="refresh-interval" name="metricRefreshSeconds" [(ngModel)]="metricRefreshSeconds">
+          <option [ngValue]="1">Every second</option><option [ngValue]="3">Every 3 seconds</option><option [ngValue]="5">Every 5 seconds</option><option [ngValue]="10">Every 10 seconds</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="setting-row">
+      <div><h2>In-app incident notifications</h2><p>Show a notification when a live metric triggers an alert rule.</p></div>
+      <label class="toggle-control"><input type="checkbox" name="notificationsEnabled" [(ngModel)]="notificationsEnabled"><span>Enable notifications</span></label>
+    </section>
+
+    <section class="setting-row">
+      <div><h2>Backend metric event rate</h2><p>Choose how many metric events per second the backend generates.</p></div>
+      <label class="setting-control" for="simulation-rate">Event rate
+        <select id="simulation-rate" name="simulationRate" [(ngModel)]="simulationRate">
+          <option [ngValue]="500">Normal · 500 events/sec</option><option [ngValue]="2000">Burst · 2,000 events/sec</option>
+        </select>
+      </label>
+    </section>
+
+    <div class="settings-actions"><button class="save-button" type="submit">Apply preferences</button>@if (savedMessage) { <span role="status">{{ savedMessage }}</span> }</div>
+  </form>
+
+  <p class="limitations">Chart and notification preferences remain in memory for this browser session. Event rate is saved in the backend JSON configuration.</p>
+</main>
